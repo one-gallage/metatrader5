@@ -26,11 +26,8 @@
 //| Inputs                                                           |
 //+------------------------------------------------------------------+
 // Inputs
-input ENUM_TIMEFRAMES   ATRTimeFrame = PERIOD_W1;             //ATR Time frame
-input int               ATRPeriod = 2;                                   //ATR Period
-input int               MAPeriod = 1;                                     //MA Period (1 = Off)
-ENUM_MA_METHOD    MAMethod = MODE_SMA;                   //MA Method
-input double            ATRPercentage = 20;                           //% of ATR
+
+input double               RenkoBoxSize = 50;                     //Renko Box Size Pips
 input bool              RenkoWicks     = true;                 // Show Wicks
 input bool              RenkoTime      = true;                 // Brick Open Time
 input bool              RenkoAsymetricReversal = false;        // Asymetric Reversals
@@ -58,13 +55,6 @@ int OnInit() {
       MessageBox("Chart must be M1 period!", __FILE__, MB_OK);
       ChartSetSymbolPeriod(0, _Symbol, PERIOD_M1);
    }
-   // ATR Config
-   hATR = iATR(original_symbol, ATRTimeFrame, ATRPeriod);
-   hMA = iMA(original_symbol, ATRTimeFrame, MAPeriod, 0, MAMethod, hATR);
-   if(hATR == INVALID_HANDLE || hMA == INVALID_HANDLE) {
-      MessageBox("Renko ATR error!", __FILE__, MB_OK);
-      return(INIT_FAILED);
-   }
    // Setup Renko
    double renko_size = ATRBoxSize();
    if (RenkoOffline == NULL)
@@ -79,11 +69,7 @@ int OnInit() {
    // Create Custom Symbol
    StringConcatenate(custom_symbol
                      , original_symbol
-                     , "#ATR", (string) ATRPeriod
-                     , StringPeriod(ATRTimeFrame)
-                     , (MAPeriod != 1) ? StringMethod(MAMethod) : ""
-                     , (MAPeriod != 1) ? (string) MAPeriod : ""
-                     , (ATRPercentage != 100) ? StringFormat("#PCT%g", ATRPercentage) : ""
+                     , "#Box#", (string) renko_size                    
                     );
    if(!RenkoOffline.CreateCustomSymbol(custom_symbol)) {
       MessageBox("Renko Custom Symbol creation error!", __FILE__, MB_OK);
@@ -137,7 +123,7 @@ void CustomRefresh() {
    //Update ATR Boxes
    datetime current = TimeCurrent();
    if(next_update <= current) {
-      next_update = current - current % PeriodSeconds(ATRTimeFrame) + PeriodSeconds(ATRTimeFrame);
+      next_update = current - current % PeriodSeconds(PERIOD_M1) + PeriodSeconds(PERIOD_M1);
       double renko_size = ATRBoxSize();
       if(!RenkoOffline.Setup(original_symbol, RENKO_TYPE_POINTS, renko_size, RenkoWicks)) {
          MessageBox("Renko reload error. Check error log!", "Renko 2.0 ATR", MB_OK);
@@ -156,16 +142,8 @@ void CustomRefresh() {
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double ATRBoxSize(int index = 1) {
-   double buffer[1], size;
-   if(MAPeriod != 1)
-      size = CopyBuffer(hMA, 0, index, 1, buffer);
-   else
-      size = CopyBuffer(hATR, 0, index, 1, buffer);
-   if(size < 0)
-      return 0;
-   size = buffer[0] * ATRPercentage / 100;
-   return NormalizeDouble(size, _Digits);
+double ATRBoxSize() {   
+   return RenkoBoxSize;
 }
 
 //+------------------------------------------------------------------+

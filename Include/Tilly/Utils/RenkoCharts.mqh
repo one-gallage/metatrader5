@@ -581,7 +581,8 @@ void RenkoCharts::Stop() {
    Comment("");
    EventKillTimer();
    MarketBookRelease(renko_symbol);
-   ObjectDelete(0, custom_symbol);
+   MarketBookRelease(custom_symbol);
+   ObjectDelete(0, custom_symbol);   
    SymbolSelect(custom_symbol, false);
    CustomSymbolDelete(custom_symbol);
 }
