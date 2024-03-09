@@ -999,6 +999,7 @@ class ServerSocket
       // Accept function, which returns NULL if no waiting client, or
       // a new instace of ClientSocket()
       ClientSocket * Accept();
+      void Close();
 
       // Access to state information
       bool Created() {return mCreated;}
@@ -1113,6 +1114,14 @@ ServerSocket::ServerSocket(ushort serverport, bool ForLocalhostOnly)
    #endif
 }
 
+void ServerSocket::Close()
+{
+   if (TerminalInfoInteger(TERMINAL_X64)) {
+      if (mSocket64 != 0)  closesocket(mSocket64);
+   } else {
+      if (mSocket32 != 0)  closesocket(mSocket32);
+   }   
+}
 
 // -------------------------------------------------------------
 // Destructor. Close the socket if created
@@ -1120,11 +1129,7 @@ ServerSocket::ServerSocket(ushort serverport, bool ForLocalhostOnly)
 
 ServerSocket::~ServerSocket()
 {
-   if (TerminalInfoInteger(TERMINAL_X64)) {
-      if (mSocket64 != 0)  closesocket(mSocket64);
-   } else {
-      if (mSocket32 != 0)  closesocket(mSocket32);
-   }   
+   Close(); 
 }
 
 // -------------------------------------------------------------
