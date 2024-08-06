@@ -8,42 +8,43 @@ echo "Parent directory=%PARENT_DIR_HOME%"
 set COPY_DIR_SRC=%CD%\copy_source
 echo "Copy source directory=%COPY_DIR_SRC%"
 
-CALL :DeleteTemp %PARENT_DIR_HOME%\meta5
+CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_neo
+CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_neo\MQL5\Indicators
+CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_neo\MQL5\Experts
 
-REM CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_aaa
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_aaa\MQL5\Indicators
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_aaa\MQL5\Experts
+CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_1
+CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_1\MQL5\Indicators
+CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_1\MQL5\Experts
 
-REM CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_bbb
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_bbb\MQL5\Indicators
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_bbb\MQL5\Experts
+CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_2
+CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_2\MQL5\Indicators
+CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_2\MQL5\Experts
 
-REM CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_ccc
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_ccc\MQL5\Indicators
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_ccc\MQL5\Experts
+CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_3
+CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_3\MQL5\Indicators
+CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_3\MQL5\Experts
 
-REM CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_ddd
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_ddd\MQL5\Indicators
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_ddd\MQL5\Experts
+CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_4
+CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_4\MQL5\Indicators
+CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_4\MQL5\Experts
 
-REM CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_eee
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_eee\MQL5\Indicators
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_eee\MQL5\Experts
+CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_5
+CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_5\MQL5\Indicators
+CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_5\MQL5\Experts
 
-REM CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_fff
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_fff\MQL5\Indicators
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_fff\MQL5\Experts
+CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_6
+CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_6\MQL5\Indicators
+CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_6\MQL5\Experts
 
-REM CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_ggg
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_ggg\MQL5\Indicators
-REM CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_ggg\MQL5\Experts
-
+CALL :DeleteTemp %PARENT_DIR_HOME%\terminal_7
+CALL :CopyUpdates %COPY_DIR_SRC%\Indicators  %PARENT_DIR_HOME%\terminal_7\MQL5\Indicators
+CALL :CopyUpdates %COPY_DIR_SRC%\Experts  %PARENT_DIR_HOME%\terminal_7\MQL5\Experts
 
 EXIT /B %ERRORLEVEL%
 
 :DeleteTemp
 
-echo "---------------------- MT5 directory=%~1"
+echo "-------------------------------- MT5 directory=%~1"
 
 if exist "%~1\logs" (
 	DEL "%~1\logs\*.*" /S /Q
