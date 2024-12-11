@@ -85,7 +85,7 @@ class CMyToolkit {
    }
 
 
-   static double CalculateLotSize(string pSymbol, double pMoneyCapital, double pRiskDecimal, int pStoplossPoints, int pExtraPriceGapPoints, double pAllowedMaxLotSize, string pCurrencyPairAppendix = "") {
+   static double CalculateLotSize(string pSymbol, double pMoneyCapital, double pRiskPercentage, int pStoplossPoints, int pExtraPriceGapPoints, double pAllowedMaxLotSize, string pCurrencyPairAppendix = "") {
       // Calculate LotSize based on Equity, Risk in decimal and StopLoss in points
       double _moneyRisk, _lotsByRequiredMargin, _lotsByRisk, _lotSize;
       int _lotdigit = 2, _totalSLPoints, _totalTickCount;
@@ -107,7 +107,7 @@ class CMyToolkit {
       if(_lotStep == 0.1) _lotdigit = 1;
       if(_lotStep == 0.01) _lotdigit = 2;
 
-      _moneyRisk = pRiskDecimal * pMoneyCapital;
+      _moneyRisk = (pRiskPercentage/100) * pMoneyCapital;
       _totalSLPoints = pStoplossPoints + pExtraPriceGapPoints;
       _totalTickCount = ToTicksCount(pSymbol, _totalSLPoints);
 
@@ -149,17 +149,17 @@ class CMyToolkit {
 
 input group                   "Risk Mode"
 input EMyCapitalCalculation   iRisk_AvailableCapital = BALANCE;  // Capital calculation mechanism
-input double                  iRisk_FractionOfCapital = 0.01;    // Risk fraction of the capital ,ex: 0.01 = 1%
+input double                  iRisk_Percentage = 0.1;           // Risk Percentage; ex: 0.5 = 0.5%
 input EMyRiskCalculation      iRisk_RiskMode = ATR_POINTS;       // Stop-Loss points calculation mechanism
 
 input group       "Stop-Loss Calculation"
-input int         iCommon_ATRLength = 14;                         // ATR length for ATR based Stop-Loss
-input double      iCommon_ATRMultiplier = 1.5;                    // ATR value multiplier
-input int         iCommon_FixedStoplossPoints = 1000;             // Fixed size Stop-Loss point count
+input int         iCommon_ATRLength = 10;                         // ATR length for ATR based Stop-Loss
+input double      iCommon_ATRMultiplier = 3;                      // ATR value multiplier
+input int         iCommon_FixedStoplossPoints = 300;             // Fixed size Stop-Loss point count
 
 input group       "General Settings"
 input string      iCommon_CurrencyPairAppendix = "";              // Currency Pair Appendix
-input color       iCommon_ColorParameters = clrOrange;            // Colour for Parameters
+input color       iCommon_ColorParameters = clrChocolate;            // Colour for Parameters
 input color       iCommon_ColorLotsize = clrDeepSkyBlue;          // Colour for calculaed Lots
 
 ENUM_BASE_CORNER  mDisplay_Corner = CORNER_LEFT_LOWER;
@@ -192,10 +192,13 @@ void myIndicatorRelease() {
 //+------------------------------------------------------------------+
 int OnInit() {
    SetIndexBuffer(0, mBuffer_lotsize, INDICATOR_DATA);
+   ArraySetAsSeries(mBuffer_lotsize,true);
    SetIndexBuffer(1, mBuffer_stoplossPoints, INDICATOR_DATA);
+   ArraySetAsSeries(mBuffer_stoplossPoints,true);
    SetIndexBuffer(2, mBuffer_atrPoints, INDICATOR_DATA);
-
+   ArraySetAsSeries(mBuffer_atrPoints,true);
    SetIndexBuffer(3, mBuffer_atr, INDICATOR_CALCULATIONS);
+   ArraySetAsSeries(mBuffer_atr,true);
 
    PlotIndexSetString(0, PLOT_LABEL, "EG_Lots");
    PlotIndexSetString(1, PLOT_LABEL, "EG_Stoploss_Points");
@@ -241,25 +244,22 @@ int OnCalculate(const int rates_total,
                 const long &tick_volume[],
                 const long &volume[],
                 const int &spread[]) {
-   if (IsStopped()) return(0);
-   if (rates_total < mMaxPeriod) return(0);
 
-   if (BarsCalculated(mHandleATR) < rates_total) return(0);
-
-   int startBar = 0, copyLength = 0;
-   if (prev_calculated > rates_total || prev_calculated <= 0) {
-      copyLength = rates_total;
-      startBar = mMaxPeriod;
-   } else {
-      copyLength = rates_total - prev_calculated;
-      if (prev_calculated > 0) copyLength++;
-      startBar = prev_calculated - 1;
+   int to_copy,limit,i;
+   
+   if(prev_calculated>rates_total || prev_calculated<=0) {      
+      limit=MathMin(rates_total-mMaxPeriod,20);       // starting index for calculation of all bars
+   }
+   else {
+      limit=rates_total-prev_calculated; // starting index for calculation of new bars
    }
 
-   if (CopyBuffer(mHandleATR, 0, 0, copyLength, mBuffer_atr) <= 0) return(0);
+   to_copy = limit+3;
+
+   if (CopyBuffer(mHandleATR, 0, 0, to_copy, mBuffer_atr) <= 0) return(0);
 
    double availableMoney, lotsize;
-   int atrPoints, slPoints, extraPoints;
+   int atrPoints, slPoints;
    string str;
 
    // Get available money
@@ -278,7 +278,7 @@ int OnCalculate(const int rates_total,
       break;
    }
 
-   for(int i = startBar; i < rates_total && !IsStopped(); i++) {
+   for(i=limit; i>=0 && !IsStopped(); i--) {      
 
       atrPoints = (int)(mBuffer_atr[i] * MathPow(10, SymbolInfoInteger(NULL, SYMBOL_DIGITS)));
       slPoints = (int)MathCeil(iCommon_ATRMultiplier * atrPoints);
@@ -288,27 +288,28 @@ int OnCalculate(const int rates_total,
          slPoints = iCommon_FixedStoplossPoints;
       } else {
          slPoints = slPoints > 0 ? slPoints : iCommon_FixedStoplossPoints;
-      }
+      }      
+      
+      slPoints += (int)SymbolInfoInteger(Symbol(),SYMBOL_SPREAD); // add the current spread
 
-      extraPoints = (int)SymbolInfoInteger(NULL, SYMBOL_SPREAD);
-      lotsize = CMyToolkit::CalculateLotSize(NULL, availableMoney, iRisk_FractionOfCapital, slPoints, 0, SymbolInfoDouble(NULL, SYMBOL_VOLUME_MAX), iCommon_CurrencyPairAppendix);
+      lotsize = CMyToolkit::CalculateLotSize(NULL, availableMoney, iRisk_Percentage, slPoints, 0, SymbolInfoDouble(NULL, SYMBOL_VOLUME_MAX), iCommon_CurrencyPairAppendix);
 
-      mBuffer_atrPoints[i] = StringToDouble(DoubleToString(atrPoints, 0));
-      mBuffer_stoplossPoints[i] = StringToDouble(DoubleToString(slPoints, 0));
+      mBuffer_atrPoints[i] = StringToDouble(IntegerToString(atrPoints));
+      mBuffer_stoplossPoints[i] = StringToDouble(IntegerToString(slPoints));
       mBuffer_lotsize[i] = StringToDouble(DoubleToString(lotsize, 2));;
    }
 
    if(iRisk_RiskMode == ATR_POINTS) {
       str = "";
-      StringConcatenate(str, "ATR (", iCommon_ATRLength, ") : ", mBuffer_atrPoints[rates_total - 1], " points");
+      StringConcatenate(str, "ATR (", iCommon_ATRLength, ") : ", StringToInteger(DoubleToString(mBuffer_atrPoints[0])), " points");
       CMyToolkit::DisplayText("@MM-ATR", str, iCommon_ColorParameters, 30, 110, mDisplay_Corner);
    }
 
    str = "";
-   StringConcatenate(str, "Risk : ", DoubleToString((iRisk_FractionOfCapital * 100), 2), "% , Stop-Loss : ", mBuffer_stoplossPoints[rates_total - 1], " points");
+   StringConcatenate(str, "Risk : ", DoubleToString(iRisk_Percentage, 2), "% , Stop-Loss : ", StringToInteger(DoubleToString(mBuffer_stoplossPoints[0])), " points");
    CMyToolkit::DisplayText("@MM-LotText", str, iCommon_ColorParameters, 30, 80, mDisplay_Corner);
    str = "";
-   StringConcatenate(str, "Lots : ", mBuffer_lotsize[rates_total - 1]);
+   StringConcatenate(str, "Lots : ", mBuffer_lotsize[0]);
    CMyToolkit::DisplayText("@MM-LotSize", str, iCommon_ColorLotsize, 30, 50, mDisplay_Corner);
 
    return(rates_total);
